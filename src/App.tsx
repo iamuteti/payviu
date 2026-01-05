@@ -2,12 +2,14 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Plus, LogOut, Search } from 'lucide-react';
 import type { Payment, User, PaymentPriority } from './types';
-import { STORAGE_KEY_PAYMENTS, STORAGE_KEY_USER } from './constants';
 import PaymentCard from './components/PaymentCard';
 import PaymentModal from './components/PaymentModal';
 import PayModal from './components/PayModal';
 import Auth from './components/Auth';
 import ThemeToggle from './components/ThemeToggle';
+import { db, auth } from './firebase';
+import { onAuthStateChanged } from 'firebase/auth';
+import { collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, query, where } from 'firebase/firestore';
 
 type SortOption = 'dueDate' | 'priority';
 
@@ -25,18 +27,40 @@ const App: React.FC = () => {
     return saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches);
   });
 
-  // Initial Load
+  // Auth State
   useEffect(() => {
-    const savedUser = localStorage.getItem(STORAGE_KEY_USER);
-    if (savedUser) setUser(JSON.parse(savedUser));
-
-    const savedPayments = localStorage.getItem(STORAGE_KEY_PAYMENTS);
-    if (savedPayments) {
-      const parsed = JSON.parse(savedPayments) as Payment[];
-      const synced = syncPaymentStatuses(parsed);
-      setPayments(synced);
-    }
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+      if (firebaseUser) {
+        setUser({
+          id: firebaseUser.uid,
+          name: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'User',
+          email: firebaseUser.email || '',
+          picture: firebaseUser.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(firebaseUser.displayName || firebaseUser.email || 'User')}&background=0ea5e9&color=fff`,
+        });
+      } else {
+        setUser(null);
+        setPayments([]);
+      }
+    });
+    return unsubscribe;
   }, []);
+
+  // Payments Listener
+  useEffect(() => {
+    if (!user) return;
+
+    const q = query(collection(db, 'payments'), where('userId', '==', user.id));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const paymentsData = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as Payment[];
+      const synced = syncPaymentStatuses(paymentsData);
+      setPayments(synced);
+    });
+
+    return unsubscribe;
+  }, [user]);
 
   // Theme Sync
   useEffect(() => {
@@ -49,10 +73,6 @@ const App: React.FC = () => {
     }
   }, [isDark]);
 
-  // Save on Change
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEY_PAYMENTS, JSON.stringify(payments));
-  }, [payments]);
 
   const syncPaymentStatuses = (list: Payment[]): Payment[] => {
     const today = new Date();
@@ -89,92 +109,71 @@ const App: React.FC = () => {
     };
   };
 
-  const handleLogin = (u: User) => {
-    setUser(u);
-    localStorage.setItem(STORAGE_KEY_USER, JSON.stringify(u));
+  const handleLogout = async () => {
+    await auth.signOut();
   };
 
-  const handleLogout = () => {
-    setUser(null);
-    localStorage.removeItem(STORAGE_KEY_USER);
-  };
+  const addOrUpdatePayment = async (data: Partial<Payment>) => {
+    if (!user) return;
 
-  const addOrUpdatePayment = (data: Partial<Payment>) => {
     let nextOccurrence: Payment | null = null;
 
-    setPayments(prev => {
-      let newList: Payment[];
-      if (editingPayment) {
-        newList = prev.map(p => {
-          if (p.id === editingPayment.id) {
-            const updated = { ...p, ...data } as Payment;
-            if (updated.status === 'paid' && updated.type === 'Recurring' && p.status !== 'paid') {
-              nextOccurrence = createRecurringOccurrence(updated);
-            }
-            return updated;
-          }
-          return p;
-        });
-      } else {
-        const newPayment: Payment = {
-          id: Math.random().toString(36).substr(2, 9),
-          title: data.title || 'Untitled',
-          description: data.description || '',
-          type: data.type || 'Onetime',
-          priority: data.priority || 'Medium',
-          dueDate: data.dueDate || new Date().toISOString().split('T')[0],
-          color: data.color || '#0ea5e9',
-          status: data.status || 'pending',
-          totalAmount: data.totalAmount || 0,
-          amountPaid: 0,
-          createdAt: new Date().toISOString(),
-        };
-        newList = [newPayment, ...prev];
-        if (newPayment.status === 'paid' && newPayment.type === 'Recurring') {
-          nextOccurrence = createRecurringOccurrence(newPayment);
-        }
+    if (editingPayment) {
+      const updated = { ...editingPayment, ...data } as Payment;
+      await updateDoc(doc(db, 'payments', editingPayment.id), { ...data, userId: user.id });
+      if (updated.status === 'paid' && updated.type === 'Recurring' && editingPayment.status !== 'paid') {
+        nextOccurrence = createRecurringOccurrence(updated);
       }
+    } else {
+      const newPayment: Omit<Payment, 'id'> = {
+        title: data.title || 'Untitled',
+        description: data.description || '',
+        type: data.type || 'Onetime',
+        priority: data.priority || 'Medium',
+        dueDate: data.dueDate || new Date().toISOString().split('T')[0],
+        color: data.color || '#0ea5e9',
+        status: data.status || 'pending',
+        totalAmount: data.totalAmount || 0,
+        amountPaid: 0,
+        createdAt: new Date().toISOString(),
+        userId: user.id,
+      };
+      const docRef = await addDoc(collection(db, 'payments'), newPayment);
+      const addedPayment = { id: docRef.id, ...newPayment } as Payment;
+      if (addedPayment.status === 'paid' && addedPayment.type === 'Recurring') {
+        nextOccurrence = createRecurringOccurrence(addedPayment);
+      }
+    }
 
-      if (nextOccurrence) {
-        return [nextOccurrence, ...newList];
-      }
-      return newList;
-    });
+    if (nextOccurrence) {
+      await addDoc(collection(db, 'payments'), { ...nextOccurrence, userId: user.id });
+    }
 
     setIsPaymentModalOpen(false);
     setEditingPayment(undefined);
   };
 
-  const deletePayment = (id: string) => {
+  const deletePayment = async (id: string) => {
     if (confirm('Are you sure you want to delete this payment?')) {
-      setPayments(prev => prev.filter(p => p.id !== id));
+      await deleteDoc(doc(db, 'payments', id));
     }
   };
 
-  const handlePay = (amount: number) => {
-    if (!activePayingPayment) return;
+  const handlePay = async (amount: number) => {
+    if (!activePayingPayment || !user) return;
 
-    setPayments(prev => {
-      let nextOccurrence: Payment | null = null;
-      const newList = prev.map(p => {
-        if (p.id === activePayingPayment.id) {
-          const newPaid = p.amountPaid + amount;
-          const newStatus = newPaid >= p.totalAmount ? 'paid' : p.status;
-          const updated = { ...p, amountPaid: newPaid, status: newStatus as any };
+    const newPaid = activePayingPayment.amountPaid + amount;
+    const newStatus = newPaid >= activePayingPayment.totalAmount ? 'paid' : activePayingPayment.status;
+    const updateData = { amountPaid: newPaid, status: newStatus };
 
-          if (updated.status === 'paid' && updated.type === 'Recurring' && p.status !== 'paid') {
-            nextOccurrence = createRecurringOccurrence(updated);
-          }
-          return updated;
-        }
-        return p;
-      });
+    await updateDoc(doc(db, 'payments', activePayingPayment.id), updateData);
 
+    if (newStatus === 'paid' && activePayingPayment.type === 'Recurring' && activePayingPayment.status !== 'paid') {
+      const nextOccurrence = createRecurringOccurrence({ ...activePayingPayment, ...updateData });
       if (nextOccurrence) {
-        return [nextOccurrence, ...newList];
+        await addDoc(collection(db, 'payments'), { ...nextOccurrence, userId: user.id });
       }
-      return newList;
-    });
+    }
 
     setIsPayModalOpen(false);
     setActivePayingPayment(undefined);
@@ -209,7 +208,7 @@ const App: React.FC = () => {
   }, [payments, searchQuery, sortBy]);
 
   if (!user) {
-    return <Auth onLogin={handleLogin} />;
+    return <Auth />;
   }
 
   return (

@@ -6,6 +6,3 @@ export const COLORS = [
   { name: 'Amber', value: '#f59e0b' },
   { name: 'Slate', value: '#64748b' },
 ];
-
-export const STORAGE_KEY_PAYMENTS = 'glasspay_payments_v1';
-export const STORAGE_KEY_USER = 'glasspay_user_v1';

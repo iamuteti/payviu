@@ -1,11 +1,11 @@
 
 import React, { useState } from 'react';
-import { useGoogleLogin } from '@react-oauth/google';
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, updateProfile } from 'firebase/auth';
 import { Mail, Lock, User as UserIcon } from 'lucide-react';
-import type { User } from '../types';
+import { auth } from '../firebase';
 
 interface AuthProps {
-  onLogin: (user: User) => void;
+  onLogin?: (user: any) => void;
 }
 
 const Auth: React.FC<AuthProps> = ({ onLogin }) => {
@@ -13,39 +13,34 @@ const Auth: React.FC<AuthProps> = ({ onLogin }) => {
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [mode, setMode] = useState<'login' | 'signup'>('login');
+  const [error, setError] = useState('');
 
-  const googleLogin = useGoogleLogin({
-    onSuccess: async (tokenResponse) => {
-      try {
-        const response = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-          headers: { Authorization: `Bearer ${tokenResponse.access_token}` }
-        });
-        const userInfo = await response.json();
+  const handleGoogleLogin = async () => {
+    try {
+      const provider = new GoogleAuthProvider();
+      await signInWithPopup(auth, provider);
+    } catch (error) {
+      console.error('Google login failed', error);
+      setError('Google login failed');
+    }
+  };
 
-        const user: User = {
-          id: userInfo.sub,
-          name: userInfo.name,
-          email: userInfo.email,
-          picture: userInfo.picture,
-        };
-        onLogin(user);
-      } catch (error) {
-        console.error('Failed to fetch user info', error);
-      }
-    },
-    onError: () => console.log('Login Failed'),
-  });
-
-  const handleEmailAuth = (e: React.FormEvent) => {
+  const handleEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault();
-    // For demo: creating a dummy user object
-    const user: User = {
-      id: Math.random().toString(36).substr(2, 9),
-      name: name || email.split('@')[0],
-      email: email,
-      picture: `https://ui-avatars.com/api/?name=${encodeURIComponent(name || email)}&background=0ea5e9&color=fff`,
-    };
-    onLogin(user);
+    setError('');
+    try {
+      if (mode === 'signup') {
+        await createUserWithEmailAndPassword(auth, email, password);
+        // Optionally update display name
+        if (name && auth.currentUser) {
+          await updateProfile(auth.currentUser, { displayName: name });
+        }
+      } else {
+        await signInWithEmailAndPassword(auth, email, password);
+      }
+    } catch (error: any) {
+      setError(error.message);
+    }
   };
 
   return (
@@ -108,6 +103,7 @@ const Auth: React.FC<AuthProps> = ({ onLogin }) => {
             >
               {mode === 'login' ? 'Sign In' : 'Create Account'}
             </button>
+            {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
           </form>
 
           <div className="flex items-center gap-4 mb-8">
@@ -118,7 +114,7 @@ const Auth: React.FC<AuthProps> = ({ onLogin }) => {
 
           <button
             type="button"
-            onClick={() => googleLogin()}
+            onClick={handleGoogleLogin}
             className="w-full flex items-center justify-center gap-3 py-4 glass bg-white/60 dark:bg-white/5 rounded-2xl border-white/40 dark:border-white/10 hover:bg-white/80 dark:hover:bg-white/10 transition-all font-bold text-sm text-slate-700 dark:text-gray-300 group"
           >
             <svg className="w-5 h-5 group-hover:scale-110 transition-transform" viewBox="0 0 24 24">
