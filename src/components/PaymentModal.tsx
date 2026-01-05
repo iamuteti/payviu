@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Calendar as CalendarIcon } from 'lucide-react';
 import DatePicker from 'react-datepicker';
-import type { Payment, PaymentType, PaymentStatus, PaymentPriority } from '../types';
+import type { Payment, PaymentType, PaymentStatus, PaymentPriority, PaymentPeriod } from '../types';
 import { COLORS } from '../constants';
 
 import "react-datepicker/dist/react-datepicker.css";
@@ -19,6 +19,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, onSubmit, 
     title: '',
     description: '',
     type: 'Onetime',
+    period: undefined,
     priority: 'Medium',
     dueDate: new Date().toISOString().split('T')[0],
     color: COLORS[0].value,
@@ -34,6 +35,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, onSubmit, 
         title: '',
         description: '',
         type: 'Onetime',
+        period: undefined,
         priority: 'Medium',
         dueDate: new Date().toISOString().split('T')[0],
         color: COLORS[0].value,
@@ -97,26 +99,44 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, onSubmit, 
               <select
                 className="w-full px-6 py-4 glass bg-white/50 dark:bg-white/5 rounded-2xl border-white/20 dark:border-white/10 outline-none text-base font-bold text-secondary cursor-pointer hover:bg-white/70 dark:hover:bg-white/10 transition-colors"
                 value={formData.type}
-                onChange={e => setFormData({ ...formData, type: e.target.value as PaymentType })}
+                onChange={e => setFormData({ ...formData, type: e.target.value as PaymentType, period: e.target.value === 'Recurring' ? formData.period : undefined })}
               >
                 <option value="Onetime">One-time</option>
                 <option value="Recurring">Recurring</option>
               </select>
             </div>
-            <div className="space-y-2">
-              <label className="text-[10px] font-black text-secondary uppercase tracking-widest ml-1">Priority</label>
-              <select
-                className="w-full px-6 py-4 glass bg-white/50 dark:bg-white/5 rounded-2xl border-white/20 dark:border-white/10 outline-none text-base font-bold text-secondary cursor-pointer hover:bg-white/70 dark:hover:bg-white/10 transition-colors"
-                value={formData.priority}
-                onChange={e => setFormData({ ...formData, priority: e.target.value as PaymentPriority })}
-              >
-                <option value="Urgent">Urgent</option>
-                <option value="Critical">Critical</option>
-                <option value="High">High</option>
-                <option value="Medium">Medium</option>
-                <option value="Low">Low</option>
-              </select>
-            </div>
+            {formData.type === 'Recurring' ? (
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-secondary uppercase tracking-widest ml-1">Period</label>
+                <select
+                  className="w-full px-6 py-4 glass bg-white/50 dark:bg-white/5 rounded-2xl border-white/20 dark:border-white/10 outline-none text-base font-bold text-secondary cursor-pointer hover:bg-white/70 dark:hover:bg-white/10 transition-colors"
+                  value={formData.period || ''}
+                  onChange={e => setFormData({ ...formData, period: e.target.value as PaymentPeriod })}
+                >
+                  <option value="">Select period</option>
+                  <option value="weekly">Weekly</option>
+                  <option value="biweekly">Bi-weekly</option>
+                  <option value="monthly">Monthly</option>
+                  <option value="semi-annually">Semi-annually</option>
+                  <option value="annually">Annually</option>
+                </select>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-secondary uppercase tracking-widest ml-1">Priority</label>
+                <select
+                  className="w-full px-6 py-4 glass bg-white/50 dark:bg-white/5 rounded-2xl border-white/20 dark:border-white/10 outline-none text-base font-bold text-secondary cursor-pointer hover:bg-white/70 dark:hover:bg-white/10 transition-colors"
+                  value={formData.priority}
+                  onChange={e => setFormData({ ...formData, priority: e.target.value as PaymentPriority })}
+                >
+                  <option value="Urgent">Urgent</option>
+                  <option value="Critical">Critical</option>
+                  <option value="High">High</option>
+                  <option value="Medium">Medium</option>
+                  <option value="Low">Low</option>
+                </select>
+              </div>
+            )}
           </div>
 
           <div className="grid grid-cols-2 gap-4">

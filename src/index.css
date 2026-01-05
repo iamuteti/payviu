@@ -117,7 +117,7 @@
   border-color: var(--glass-border) !important;
 }
 
-.dark .react-datepicker {
+/* .dark .react-datepicker {
   @apply !bg-slate-800/95 !border-slate-700;
 }
 
@@ -155,7 +155,7 @@
 
 .react-datepicker__day--outside-month {
   @apply !text-gray-400 dark:!text-gray-600;
-}
+} */
 
 /* Fix for Select elements in dark mode */
 select {

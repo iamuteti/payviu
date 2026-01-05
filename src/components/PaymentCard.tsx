@@ -14,14 +14,48 @@ const PaymentCard: React.FC<PaymentCardProps> = ({ payment, onEdit, onDelete, on
   const [isOpen, setIsOpen] = useState(false);
 
   const calculateTimeProgress = () => {
-    const created = new Date(payment.createdAt).getTime();
-    const due = new Date(payment.dueDate).getTime();
     const now = new Date().getTime();
+    const due = new Date(payment.dueDate).getTime();
 
     if (now >= due) return 100;
-    const total = due - created;
-    const elapsed = now - created;
-    return Math.min(100, Math.max(0, (elapsed / total) * 100));
+
+    // For one-time payments, calculate based on time from now to due date
+    if (payment.type === 'Onetime') {
+      const oneDayMs = 24 * 60 * 60 * 1000;
+      const daysRemaining = Math.ceil((due - now) / oneDayMs);
+      // Assume a reasonable payment window (e.g., 30 days from due date for calculation)
+      const totalDaysWindow = 30;
+      const elapsedDays = totalDaysWindow - daysRemaining;
+      return Math.min(100, Math.max(0, (elapsedDays / totalDaysWindow) * 100));
+    }
+
+    // For recurring payments with a period, calculate based on the cycle
+    if (payment.type === 'Recurring' && payment.period) {
+      const periodDays = {
+        weekly: 7,
+        biweekly: 14,
+        monthly: 30,
+        'semi-annually': 180,
+        annually: 365,
+      };
+      
+      const daysInCycle = periodDays[payment.period];
+      const dayOfMonth = new Date(payment.dueDate).getDate();
+      const today = new Date();
+      
+      // Calculate days until due date in current cycle
+      let daysUntilDue = dayOfMonth - today.getDate();
+      
+      // If due date has passed this month, next cycle
+      if (daysUntilDue < 0) {
+        daysUntilDue += daysInCycle;
+      }
+      
+      const elapsedInCycle = daysInCycle - daysUntilDue;
+      return Math.min(100, Math.max(0, (elapsedInCycle / daysInCycle) * 100));
+    }
+    
+    return 0;
   };
 
   const timeProgress = calculateTimeProgress();
@@ -37,6 +71,12 @@ const PaymentCard: React.FC<PaymentCardProps> = ({ payment, onEdit, onDelete, on
       case 'Low': return 'text-slate-500 bg-slate-500/10 ring-1 ring-slate-500/20';
       default: return 'text-gray-500 bg-gray-500/10';
     }
+  };
+
+  const getTimeProgressColor = (progress: number) => {
+    if (progress < 33) return 'bg-emerald-500';
+    if (progress < 66) return 'bg-amber-500';
+    return 'bg-red-500';
   };
 
   return (
@@ -69,7 +109,7 @@ const PaymentCard: React.FC<PaymentCardProps> = ({ payment, onEdit, onDelete, on
           <div className="w-20 sm:w-28 shrink-0 flex flex-col items-end">
             <div className="h-1.5 w-full bg-gray-200 dark:bg-gray-800 rounded-full overflow-hidden">
               <div
-                className={`h-full transition-all duration-1000 ease-out ${payment.status === 'paid' ? 'bg-emerald-500' : isOverdue ? 'bg-red-500' : 'bg-sky-500'}`}
+                className={`h-full transition-all duration-1000 ease-out ${payment.status === 'paid' ? 'bg-emerald-500' : isOverdue ? 'bg-red-500' : getTimeProgressColor(timeProgress)}`}
                 style={{ width: `${timeProgress}%` }}
               />
             </div>

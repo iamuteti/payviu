@@ -1,6 +1,7 @@
 
 export type PaymentStatus = 'pending' | 'paid' | 'overdue';
 export type PaymentType = 'Onetime' | 'Recurring';
+export type PaymentPeriod = 'weekly' | 'biweekly' | 'monthly' | 'semi-annually' | 'annually';
 export type PaymentPriority = 'Urgent' | 'Critical' | 'High' | 'Medium' | 'Low';
 
 export interface Payment {
@@ -8,6 +9,7 @@ export interface Payment {
   title: string;
   description: string;
   type: PaymentType;
+  period?: PaymentPeriod;
   priority: PaymentPriority;
   dueDate: string;
   color: string;
