@@ -3,6 +3,12 @@
 @theme {
   --font-sans: "Outfit", ui-sans-serif, system-ui, -apple-system, sans-serif;
   --color-accent: #0ea5e9;
+  --color-primary: var(--text-primary);
+  --color-secondary: var(--text-secondary);
+  --color-muted: var(--text-muted);
+  --card-bg: var(--card-bg);
+  --glass-bg: var(--glass-bg);
+  --glass-border: var(--glass-border);
 }
 
 /* @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100;200;300;400;500;600;700;800;900&display=swap'); */

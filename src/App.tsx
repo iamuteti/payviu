@@ -226,7 +226,7 @@ const App: React.FC = () => {
             <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-emerald-500 border-4 border-white dark:border-slate-900 rounded-full" />
           </div>
           <div>
-            <h1 className="text-2xl sm:text-3xl font-black text-slate-950 dark:text-white tracking-tight leading-none mb-1">GlassPay</h1>
+            <h1 className="text-2xl sm:text-3xl font-black text-primary tracking-tight leading-none mb-1">GlassPay</h1>
             <p className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-[0.2em]">Financial Overview</p>
           </div>
         </div>

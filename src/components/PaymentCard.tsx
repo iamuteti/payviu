@@ -49,7 +49,7 @@ const PaymentCard: React.FC<PaymentCardProps> = ({ payment, onEdit, onDelete, on
           <div className="w-1.5 h-8 rounded-full shrink-0" style={{ backgroundColor: payment.color }} />
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-0.5">
-              <h3 className="font-extrabold text-slate-900 dark:text-white truncate text-base tracking-tight leading-tight">{payment.title}</h3>
+              <h3 className="font-extrabold text-secondary truncate text-base tracking-tight leading-tight">{payment.title}</h3>
               {payment.type === 'Recurring' && (
                 <RotateCcw size={12} className="text-sky-500 shrink-0" />
               )}
