@@ -1,21 +1,20 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { Plus, LogOut, Search } from 'lucide-react';
-import type { Payment, User, PaymentPriority } from './types';
+import { collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, query, where } from 'firebase/firestore';
+import type { Payment, PaymentPriority } from './types';
 import PaymentCard from './components/PaymentCard';
 import PaymentModal from './components/PaymentModal';
 import PayModal from './components/PayModal';
 import Auth from './components/Auth';
 import ThemeToggle from './components/ThemeToggle';
 import { db, auth } from './firebase';
-import { collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, query, where } from 'firebase/firestore';
 import { useUser } from './contexts/UserContext';
 
 type SortOption = 'dueDate' | 'priority';
 
 const App: React.FC = () => {
   const { user } = useUser();
-  const [payments, setPayments] = useState<Payment[]>([]);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [isPayModalOpen, setIsPayModalOpen] = useState(false);
   const [editingPayment, setEditingPayment] = useState<Payment | undefined>(undefined);
@@ -26,10 +25,21 @@ const App: React.FC = () => {
     const saved = localStorage.getItem('theme');
     return saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches);
   });
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+
+  const [localPayments, setLocalPayments] = useState<Payment[]>(() => {
+    const saved = localStorage.getItem('payments');
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  const [pendingChanges, setPendingChanges] = useState<any[]>(() => {
+    const saved = localStorage.getItem('pendingChanges');
+    return saved ? JSON.parse(saved) : [];
+  });
 
   // Payments Listener
   useEffect(() => {
-    if (!user) return;
+    if (!user || !isOnline) return;
 
     const q = query(collection(db, 'payments'), where('userId', '==', user.id));
     const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -38,11 +48,11 @@ const App: React.FC = () => {
         ...doc.data()
       })) as Payment[];
       const synced = syncPaymentStatuses(paymentsData);
-      setPayments(synced);
+      setLocalPayments(synced);
     });
 
     return unsubscribe;
-  }, [user]);
+  }, [user, isOnline]);
 
   // Theme Sync
   useEffect(() => {
@@ -54,6 +64,33 @@ const App: React.FC = () => {
       localStorage.setItem('theme', 'light');
     }
   }, [isDark]);
+
+  // Online/Offline listeners
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
+  // Save local payments to localStorage
+  useEffect(() => {
+    localStorage.setItem('payments', JSON.stringify(localPayments));
+  }, [localPayments]);
+
+  // Save pending changes to localStorage
+  useEffect(() => {
+    localStorage.setItem('pendingChanges', JSON.stringify(pendingChanges));
+  }, [pendingChanges]);
+
+  // Apply pending changes when online
+  useEffect(() => {
+    applyPendingChanges();
+  }, [user, isOnline]);
 
 
   const syncPaymentStatuses = (list: Payment[]): Payment[] => {
@@ -78,7 +115,7 @@ const App: React.FC = () => {
 
   const createRecurringOccurrence = (p: Payment) => {
     const nextDate = getNextOccurrenceDate(p.dueDate);
-    const alreadyExists = payments.some(item => item.title === p.title && item.dueDate === nextDate);
+    const alreadyExists = localPayments.some(item => item.title === p.title && item.dueDate === nextDate);
     if (alreadyExists) return null;
 
     return {
@@ -91,6 +128,39 @@ const App: React.FC = () => {
     };
   };
 
+  const applyPendingChanges = async () => {
+    if (!user || !isOnline) return;
+    for (const change of pendingChanges) {
+      try {
+        if (change.type === 'add') {
+          const docRef = await addDoc(collection(db, 'payments'), change.data);
+          setLocalPayments(prev => prev.map(p => p.id === change.data.id ? { ...p, id: docRef.id } : p));
+          const addedPayment = { id: docRef.id, ...change.data } as Payment;
+          if (addedPayment.status === 'paid' && addedPayment.type === 'Recurring') {
+            const nextOccurrence = createRecurringOccurrence(addedPayment);
+            if (nextOccurrence) {
+              await addDoc(collection(db, 'payments'), { ...nextOccurrence, userId: user.id });
+            }
+          }
+        } else if (change.type === 'update') {
+          await updateDoc(doc(db, 'payments', change.id), change.data);
+          const updatedPayment = localPayments.find(p => p.id === change.id);
+          if (updatedPayment && change.data.status === 'paid' && updatedPayment.type === 'Recurring' && updatedPayment.status !== 'paid') {
+            const nextOccurrence = createRecurringOccurrence({ ...updatedPayment, ...change.data });
+            if (nextOccurrence) {
+              await addDoc(collection(db, 'payments'), { ...nextOccurrence, userId: user.id });
+            }
+          }
+        } else if (change.type === 'delete') {
+          await deleteDoc(doc(db, 'payments', change.id));
+        }
+      } catch (error) {
+        console.error('Failed to apply change:', error);
+      }
+    }
+    setPendingChanges([]);
+  };
+
   const handleLogout = async () => {
     await auth.signOut();
   };
@@ -101,34 +171,70 @@ const App: React.FC = () => {
     let nextOccurrence: Payment | null = null;
 
     if (editingPayment) {
-      const updated = { ...editingPayment, ...data } as Payment;
-      await updateDoc(doc(db, 'payments', editingPayment.id), { ...data, userId: user.id });
-      if (updated.status === 'paid' && updated.type === 'Recurring' && editingPayment.status !== 'paid') {
-        nextOccurrence = createRecurringOccurrence(updated);
+      if (!isOnline) {
+        const updated = { ...editingPayment, ...data } as Payment;
+        setLocalPayments(prev => prev.map(p => p.id === editingPayment.id ? updated : p));
+        setPendingChanges(prev => [...prev, { type: 'update', id: editingPayment.id, data: { ...data, userId: user.id } }]);
+        if (updated.status === 'paid' && updated.type === 'Recurring' && editingPayment.status !== 'paid') {
+          nextOccurrence = createRecurringOccurrence(updated);
+        }
+      } else {
+        const updated = { ...editingPayment, ...data } as Payment;
+        await updateDoc(doc(db, 'payments', editingPayment.id), { ...data, userId: user.id });
+        if (updated.status === 'paid' && updated.type === 'Recurring' && editingPayment.status !== 'paid') {
+          nextOccurrence = createRecurringOccurrence(updated);
+        }
       }
     } else {
-      const newPayment: Omit<Payment, 'id'> = {
-        title: data.title || 'Untitled',
-        description: data.description || '',
-        type: data.type || 'Onetime',
-        priority: data.priority || 'Medium',
-        dueDate: data.dueDate || new Date().toISOString().split('T')[0],
-        color: data.color || '#0ea5e9',
-        status: data.status || 'pending',
-        totalAmount: data.totalAmount || 0,
-        amountPaid: 0,
-        createdAt: new Date().toISOString(),
-        userId: user.id,
-      };
-      const docRef = await addDoc(collection(db, 'payments'), newPayment);
-      const addedPayment = { id: docRef.id, ...newPayment } as Payment;
-      if (addedPayment.status === 'paid' && addedPayment.type === 'Recurring') {
-        nextOccurrence = createRecurringOccurrence(addedPayment);
+      if (!isOnline) {
+        const newPayment = {
+          id: Math.random().toString(36).substr(2, 9),
+          title: data.title || 'Untitled',
+          description: data.description || '',
+          type: data.type || 'Onetime',
+          priority: data.priority || 'Medium',
+          dueDate: data.dueDate || new Date().toISOString().split('T')[0],
+          color: data.color || '#0ea5e9',
+          status: data.status || 'pending',
+          totalAmount: data.totalAmount || 0,
+          amountPaid: 0,
+          createdAt: new Date().toISOString(),
+          userId: user.id,
+        };
+        setLocalPayments(prev => [...prev, newPayment]);
+        setPendingChanges(prev => [...prev, { type: 'add', data: newPayment }]);
+        if (newPayment.status === 'paid' && newPayment.type === 'Recurring') {
+          nextOccurrence = createRecurringOccurrence(newPayment);
+        }
+      } else {
+        const newPayment: Omit<Payment, 'id'> = {
+          title: data.title || 'Untitled',
+          description: data.description || '',
+          type: data.type || 'Onetime',
+          priority: data.priority || 'Medium',
+          dueDate: data.dueDate || new Date().toISOString().split('T')[0],
+          color: data.color || '#0ea5e9',
+          status: data.status || 'pending',
+          totalAmount: data.totalAmount || 0,
+          amountPaid: 0,
+          createdAt: new Date().toISOString(),
+          userId: user.id,
+        };
+        const docRef = await addDoc(collection(db, 'payments'), newPayment);
+        const addedPayment = { id: docRef.id, ...newPayment } as Payment;
+        if (addedPayment.status === 'paid' && addedPayment.type === 'Recurring') {
+          nextOccurrence = createRecurringOccurrence(addedPayment);
+        }
       }
     }
 
     if (nextOccurrence) {
-      await addDoc(collection(db, 'payments'), { ...nextOccurrence, userId: user.id });
+      if (!isOnline) {
+        setLocalPayments(prev => [...prev, nextOccurrence]);
+        setPendingChanges(prev => [...prev, { type: 'add', data: nextOccurrence }]);
+      } else {
+        await addDoc(collection(db, 'payments'), { ...nextOccurrence, userId: user.id });
+      }
     }
 
     setIsPaymentModalOpen(false);
@@ -137,7 +243,12 @@ const App: React.FC = () => {
 
   const deletePayment = async (id: string) => {
     if (confirm('Are you sure you want to delete this payment?')) {
-      await deleteDoc(doc(db, 'payments', id));
+      if (!isOnline) {
+        setLocalPayments(prev => prev.filter(p => p.id !== id));
+        setPendingChanges(prev => [...prev, { type: 'delete', id }]);
+      } else {
+        await deleteDoc(doc(db, 'payments', id));
+      }
     }
   };
 
@@ -148,12 +259,23 @@ const App: React.FC = () => {
     const newStatus = newPaid >= activePayingPayment.totalAmount ? 'paid' : activePayingPayment.status;
     const updateData = { amountPaid: newPaid, status: newStatus };
 
-    await updateDoc(doc(db, 'payments', activePayingPayment.id), updateData);
-
-    if (newStatus === 'paid' && activePayingPayment.type === 'Recurring' && activePayingPayment.status !== 'paid') {
-      const nextOccurrence = createRecurringOccurrence({ ...activePayingPayment, ...updateData });
-      if (nextOccurrence) {
-        await addDoc(collection(db, 'payments'), { ...nextOccurrence, userId: user.id });
+    if (!isOnline) {
+      setLocalPayments(prev => prev.map(p => p.id === activePayingPayment.id ? { ...p, ...updateData } : p));
+      setPendingChanges(prev => [...prev, { type: 'update', id: activePayingPayment.id, data: updateData }]);
+      if (newStatus === 'paid' && activePayingPayment.type === 'Recurring' && activePayingPayment.status !== 'paid') {
+        const nextOccurrence = createRecurringOccurrence({ ...activePayingPayment, ...updateData });
+        if (nextOccurrence) {
+          setLocalPayments(prev => [...prev, nextOccurrence]);
+          setPendingChanges(prev => [...prev, { type: 'add', data: nextOccurrence }]);
+        }
+      }
+    } else {
+      await updateDoc(doc(db, 'payments', activePayingPayment.id), updateData);
+      if (newStatus === 'paid' && activePayingPayment.type === 'Recurring' && activePayingPayment.status !== 'paid') {
+        const nextOccurrence = createRecurringOccurrence({ ...activePayingPayment, ...updateData });
+        if (nextOccurrence) {
+          await addDoc(collection(db, 'payments'), { ...nextOccurrence, userId: user.id });
+        }
       }
     }
 
@@ -170,7 +292,7 @@ const App: React.FC = () => {
   };
 
   const processedPayments = useMemo(() => {
-    let filtered = payments.filter(p =>
+    let filtered = localPayments.filter(p =>
       p.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       p.description.toLowerCase().includes(searchQuery.toLowerCase())
     );
@@ -187,7 +309,7 @@ const App: React.FC = () => {
         return diff;
       }
     });
-  }, [payments, searchQuery, sortBy]);
+  }, [localPayments, searchQuery, sortBy]);
 
   if (!user) {
     return <Auth />;

@@ -5,6 +5,8 @@ import DatePicker from 'react-datepicker';
 import type { Payment, PaymentType, PaymentStatus, PaymentPriority } from '../types';
 import { COLORS } from '../constants';
 
+import "react-datepicker/dist/react-datepicker.css";
+
 interface PaymentModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -50,23 +52,23 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, onSubmit, 
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300">
-      <div className="relative w-full max-w-xl glass-card bg-white/95 dark:bg-slate-900/95 p-8 sm:p-10 rounded-[2.5rem] shadow-[0_0_50px_-12px_rgba(0,0,0,0.5)] animate-in zoom-in-95 slide-in-from-bottom-10 duration-500 max-h-[95vh] overflow-y-auto no-scrollbar">
+      <div className="relative w-full max-w-xl glass-card p-8 sm:p-10 rounded-[2.5rem] shadow-[0_0_50px_-12px_rgba(0,0,0,0.5)] animate-in zoom-in-95 slide-in-from-bottom-10 duration-500 max-h-[95vh] overflow-y-auto no-scrollbar">
         <div className="flex items-center justify-between mb-8">
-          <h2 className="text-3xl font-black text-gray-900 dark:text-white tracking-tight">
+          <h2 className="text-3xl font-black text-secondary tracking-tight">
             {initialData ? 'Update Record' : 'Add Payment'}
           </h2>
-          <button onClick={onClose} className="p-3 glass rounded-2xl text-gray-400 hover:text-red-500 hover:bg-red-500/10 transition-all active:scale-95">
+          <button onClick={onClose} className="p-3 glass rounded-2xl text-secondary hover:text-red-500 hover:bg-red-500/10 transition-all active:scale-95">
             <X size={24} />
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
-            <label className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest ml-1">Payment Title</label>
+            <label className="text-[10px] font-black text-secondary uppercase tracking-widest ml-1">Payment Title</label>
             <input
               required
               type="text"
-              className="w-full px-6 py-4 glass bg-white/50 dark:bg-white/5 rounded-2xl border-white/20 dark:border-white/10 focus:ring-4 focus:ring-sky-500/20 focus:border-sky-500/40 outline-none text-base font-bold text-gray-900 dark:text-white transition-all placeholder-gray-400"
+              className="w-full px-6 py-4 glass bg-white/50 dark:bg-white/5 rounded-2xl border-white/20 dark:border-white/10 focus:ring-4 focus:ring-sky-500/20 focus:border-sky-500/40 outline-none text-base font-bold text-secondary transition-all placeholder-gray-400"
               placeholder="e.g. Monthly Rent"
               value={formData.title}
               onChange={e => setFormData({ ...formData, title: e.target.value })}
@@ -74,14 +76,14 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, onSubmit, 
           </div>
 
           <div className="space-y-2">
-            <label className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest ml-1">Total Amount ($)</label>
+            <label className="text-[10px] font-black text-secondary uppercase tracking-widest ml-1">Total Amount ($)</label>
             <div className="relative">
-              <span className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-400 font-bold">$</span>
+              <span className="absolute left-6 top-1/2 -translate-y-1/2 text-secondary font-bold">$</span>
               <input
                 required
                 type="number"
-                step="0.01"
-                className="w-full pl-10 pr-6 py-4 glass bg-white/50 dark:bg-white/5 rounded-2xl border-white/20 dark:border-white/10 focus:ring-4 focus:ring-sky-500/20 focus:border-sky-500/40 outline-none text-base font-bold text-gray-900 dark:text-white transition-all"
+                step="1"
+                className="w-full pl-10 pr-6 py-4 glass bg-white/50 dark:bg-white/5 rounded-2xl border-white/20 dark:border-white/10 focus:ring-4 focus:ring-sky-500/20 focus:border-sky-500/40 outline-none text-base font-bold text-secondary transition-all"
                 placeholder="0.00"
                 value={formData.totalAmount}
                 onChange={e => setFormData({ ...formData, totalAmount: parseFloat(e.target.value) || 0 })}
@@ -91,9 +93,9 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, onSubmit, 
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <label className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest ml-1">Type</label>
+              <label className="text-[10px] font-black text-secondary uppercase tracking-widest ml-1">Type</label>
               <select
-                className="w-full px-6 py-4 glass bg-white/50 dark:bg-white/5 rounded-2xl border-white/20 dark:border-white/10 outline-none text-base font-bold text-gray-900 dark:text-white cursor-pointer hover:bg-white/70 dark:hover:bg-white/10 transition-colors"
+                className="w-full px-6 py-4 glass bg-white/50 dark:bg-white/5 rounded-2xl border-white/20 dark:border-white/10 outline-none text-base font-bold text-secondary cursor-pointer hover:bg-white/70 dark:hover:bg-white/10 transition-colors"
                 value={formData.type}
                 onChange={e => setFormData({ ...formData, type: e.target.value as PaymentType })}
               >
@@ -102,9 +104,9 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, onSubmit, 
               </select>
             </div>
             <div className="space-y-2">
-              <label className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest ml-1">Priority</label>
+              <label className="text-[10px] font-black text-secondary uppercase tracking-widest ml-1">Priority</label>
               <select
-                className="w-full px-6 py-4 glass bg-white/50 dark:bg-white/5 rounded-2xl border-white/20 dark:border-white/10 outline-none text-base font-bold text-gray-900 dark:text-white cursor-pointer hover:bg-white/70 dark:hover:bg-white/10 transition-colors"
+                className="w-full px-6 py-4 glass bg-white/50 dark:bg-white/5 rounded-2xl border-white/20 dark:border-white/10 outline-none text-base font-bold text-secondary cursor-pointer hover:bg-white/70 dark:hover:bg-white/10 transition-colors"
                 value={formData.priority}
                 onChange={e => setFormData({ ...formData, priority: e.target.value as PaymentPriority })}
               >
@@ -119,7 +121,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, onSubmit, 
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <label className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest ml-1">Due Date</label>
+              <label className="text-[10px] font-black text-secondary uppercase tracking-widest ml-1">Due Date</label>
               <div className="relative">
                 <DatePicker
                   selected={formData.dueDate ? new Date(formData.dueDate) : new Date()}
@@ -127,15 +129,15 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, onSubmit, 
                     if (date) setFormData({ ...formData, dueDate: date.toISOString().split('T')[0] });
                   }}
                   dateFormat="MMM d, yyyy"
-                  className="w-full px-6 py-4 glass bg-white/50 dark:bg-white/5 rounded-2xl border-white/20 dark:border-white/10 outline-none text-base font-bold text-gray-900 dark:text-white cursor-pointer hover:bg-white/70 dark:hover:bg-white/10 transition-colors"
+                  className="w-full px-6 py-4 glass bg-white/50 dark:bg-white/5 rounded-2xl border-white/20 dark:border-white/10 outline-none text-base font-bold text-secondary cursor-pointer hover:bg-white/70 dark:hover:bg-white/10 transition-colors [&_.react-datepicker]:!bg-slate-800 [&_.react-datepicker]:!border-slate-700 [&_.react-datepicker__day--selected]:!bg-sky-500"
                 />
-                <CalendarIcon size={14} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                <CalendarIcon size={14} className="absolute right-4 top-1/2 -translate-y-1/2 text-secondary pointer-events-none" />
               </div>
             </div>
             <div className="space-y-2">
-              <label className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest ml-1">Status</label>
+              <label className="text-[10px] font-black text-secondary uppercase tracking-widest ml-1">Status</label>
               <select
-                className="w-full px-6 py-4 glass bg-white/50 dark:bg-white/5 rounded-2xl border-white/20 dark:border-white/10 outline-none text-base font-bold text-gray-900 dark:text-white cursor-pointer hover:bg-white/70 dark:hover:bg-white/10 transition-colors"
+                className="w-full px-6 py-4 glass bg-white/50 dark:bg-white/5 rounded-2xl border-white/20 dark:border-white/10 outline-none text-base font-bold text-secondary cursor-pointer hover:bg-white/70 dark:hover:bg-white/10 transition-colors"
                 value={formData.status}
                 onChange={e => setFormData({ ...formData, status: e.target.value as PaymentStatus })}
               >
@@ -147,9 +149,9 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, onSubmit, 
           </div>
 
           <div className="space-y-2">
-            <label className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest ml-1">Notes</label>
+            <label className="text-[10px] font-black text-secondary uppercase tracking-widest ml-1">Notes</label>
             <textarea
-              className="w-full px-6 py-4 glass bg-white/50 dark:bg-white/5 rounded-2xl border-white/20 dark:border-white/10 focus:ring-4 focus:ring-sky-500/20 focus:border-sky-500/40 outline-none text-base font-bold text-gray-900 dark:text-white resize-none h-32 transition-all placeholder-gray-400"
+              className="w-full px-6 py-4 glass bg-white/50 dark:bg-white/5 rounded-2xl border-white/20 dark:border-white/10 focus:ring-4 focus:ring-sky-500/20 focus:border-sky-500/40 outline-none text-base font-bold text-secondary resize-none h-32 transition-all placeholder-gray-400"
               placeholder="Add some details..."
               value={formData.description}
               onChange={e => setFormData({ ...formData, description: e.target.value })}
@@ -157,7 +159,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, onSubmit, 
           </div>
 
           <div className="space-y-2">
-            <label className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest ml-1">Label Color</label>
+            <label className="text-[10px] font-black text-secondary uppercase tracking-widest ml-1">Label Color</label>
             <div className="flex items-center justify-between gap-3 py-2 px-1">
               {COLORS.map(color => (
                 <button

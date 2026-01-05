@@ -98,7 +98,7 @@ const PaymentCard: React.FC<PaymentCardProps> = ({ payment, onEdit, onDelete, on
                 <div className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-1.5">
                   <Calendar size={12} /> Due Date
                 </div>
-                <div className="text-sm font-extrabold text-slate-900 dark:text-white">
+                <div className="text-sm font-extrabold text-primary">
                   {new Date(payment.dueDate).toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' })}
                 </div>
               </div>
@@ -107,7 +107,7 @@ const PaymentCard: React.FC<PaymentCardProps> = ({ payment, onEdit, onDelete, on
                   <CreditCard size={12} /> Payment Plan
                 </div>
                 <div className="flex items-center justify-between mb-1.5">
-                  <span className="text-sm font-extrabold text-slate-900 dark:text-white">
+                  <span className="text-sm font-extrabold text-primary">
                     ${payment.amountPaid.toFixed(2)} <span className="text-slate-400 dark:text-gray-600 font-medium">/ ${payment.totalAmount.toFixed(2)}</span>
                   </span>
                   <span className="text-[10px] font-black text-emerald-500">{Math.round(paymentProgress)}%</span>

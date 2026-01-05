@@ -117,8 +117,16 @@
   border-color: var(--glass-border) !important;
 }
 
+.dark .react-datepicker {
+  @apply !bg-slate-800/95 !border-slate-700;
+}
+
 .react-datepicker__header {
   @apply !bg-transparent !border-b !border-white/10 !pt-4;
+}
+
+.dark .react-datepicker__header {
+  @apply !bg-slate-800/50 !border-slate-700;
 }
 
 .react-datepicker__day--selected {
@@ -127,6 +135,26 @@
 
 .react-datepicker__day:hover {
   @apply !bg-white/10 !rounded-xl;
+}
+
+.dark .react-datepicker__day:hover {
+  @apply !bg-white/20 !rounded-xl;
+}
+
+.react-datepicker__day-name {
+  @apply !text-gray-600 dark:!text-gray-400;
+}
+
+.react-datepicker__current-month {
+  @apply !text-gray-900 dark:!text-white;
+}
+
+.react-datepicker__day {
+  @apply !text-gray-900 dark:!text-white;
+}
+
+.react-datepicker__day--outside-month {
+  @apply !text-gray-400 dark:!text-gray-600;
 }
 
 /* Fix for Select elements in dark mode */
