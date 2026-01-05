@@ -8,13 +8,13 @@ import PayModal from './components/PayModal';
 import Auth from './components/Auth';
 import ThemeToggle from './components/ThemeToggle';
 import { db, auth } from './firebase';
-import { onAuthStateChanged } from 'firebase/auth';
 import { collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, query, where } from 'firebase/firestore';
+import { useUser } from './contexts/UserContext';
 
 type SortOption = 'dueDate' | 'priority';
 
 const App: React.FC = () => {
-  const [user, setUser] = useState<User | null>(null);
+  const { user } = useUser();
   const [payments, setPayments] = useState<Payment[]>([]);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [isPayModalOpen, setIsPayModalOpen] = useState(false);
@@ -26,24 +26,6 @@ const App: React.FC = () => {
     const saved = localStorage.getItem('theme');
     return saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches);
   });
-
-  // Auth State
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-      if (firebaseUser) {
-        setUser({
-          id: firebaseUser.uid,
-          name: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'User',
-          email: firebaseUser.email || '',
-          picture: firebaseUser.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(firebaseUser.displayName || firebaseUser.email || 'User')}&background=0ea5e9&color=fff`,
-        });
-      } else {
-        setUser(null);
-        setPayments([]);
-      }
-    });
-    return unsubscribe;
-  }, []);
 
   // Payments Listener
   useEffect(() => {
