@@ -4,11 +4,9 @@ import { signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithP
 import { Mail, Lock, User as UserIcon } from 'lucide-react';
 import { auth } from '../firebase';
 
-interface AuthProps {
-  onLogin?: (user: any) => void;
-}
+interface AuthProps { }
 
-const Auth: React.FC<AuthProps> = ({ onLogin }) => {
+const Auth: React.FC<AuthProps> = ({ }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
