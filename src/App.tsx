@@ -252,12 +252,12 @@ const App: React.FC = () => {
     }
   };
 
-  const handlePay = async (amount: number) => {
+  const handlePay = async (amount: number, paymentDate: string) => {
     if (!activePayingPayment || !user) return;
 
     const newPaid = activePayingPayment.amountPaid + amount;
     const newStatus = newPaid >= activePayingPayment.totalAmount ? 'paid' : activePayingPayment.status;
-    const updateData = { amountPaid: newPaid, status: newStatus };
+    const updateData = { amountPaid: newPaid, status: newStatus, paymentDate };
 
     if (!isOnline) {
       setLocalPayments(prev => prev.map(p => p.id === activePayingPayment.id ? { ...p, ...updateData } : p));
@@ -352,7 +352,7 @@ const App: React.FC = () => {
           <input
             type="text"
             placeholder="Search payments by name or details..."
-            className="w-full pl-14 pr-6 py-5 glass-card bg-white/60 dark:bg-white/5 rounded-[2rem] focus:ring-4 focus:ring-sky-500/10 outline-none placeholder-slate-400 dark:placeholder-gray-500 transition-all text-base font-bold text-slate-900 dark:text-white shadow-xl"
+            className="w-full pl-14 pr-6 py-5 glass-card bg-white/60 dark:bg-white/5 rounded-[2rem] focus:ring-4 focus:ring-teal-500/10 outline-none placeholder-slate-400 dark:placeholder-gray-500 transition-all text-base font-bold text-slate-900 dark:text-white shadow-xl"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
@@ -363,13 +363,13 @@ const App: React.FC = () => {
           <div className="flex p-1 gap-1 glass rounded-2xl bg-white/40 dark:bg-black/20 w-fit">
             <button
               onClick={() => setSortBy('dueDate')}
-              className={`px-6 py-2.5 rounded-[1.25rem] text-xs font-black transition-all ${sortBy === 'dueDate' ? 'bg-sky-500 text-white shadow-lg' : 'text-gray-500 dark:text-gray-400 hover:bg-white/10'}`}
+              className={`px-6 py-2.5 rounded-[1.25rem] text-xs font-black transition-all ${sortBy === 'dueDate' ? 'bg-teal-500 text-white shadow-lg' : 'text-gray-500 dark:text-gray-400 hover:bg-white/10'}`}
             >
               Due Date
             </button>
             <button
               onClick={() => setSortBy('priority')}
-              className={`px-6 py-2.5 rounded-[1.25rem] text-xs font-black transition-all ${sortBy === 'priority' ? 'bg-sky-500 text-white shadow-lg' : 'text-gray-500 dark:text-gray-400 hover:bg-white/10'}`}
+              className={`px-6 py-2.5 rounded-[1.25rem] text-xs font-black transition-all ${sortBy === 'priority' ? 'bg-teal-500 text-white shadow-lg' : 'text-gray-500 dark:text-gray-400 hover:bg-white/10'}`}
             >
               Priority
             </button>
@@ -405,9 +405,9 @@ const App: React.FC = () => {
 
       <button
         onClick={() => { setEditingPayment(undefined); setIsPaymentModalOpen(true); }}
-        className="fixed bottom-10 right-10 w-20 h-20 bg-sky-500 text-white rounded-[2rem] shadow-2xl flex items-center justify-center hover:scale-110 active:scale-90 transition-all z-40 border-4 border-white/20 group"
+        className="fixed bottom-10 right-10 w-20 h-20 bg-teal-500 text-white rounded-[2rem] shadow-2xl flex items-center justify-center hover:scale-110 active:scale-90 transition-all z-40 border-4 border-white/20 group"
       >
-        <div className="absolute inset-0 bg-sky-500 rounded-[2rem] blur-xl opacity-40 group-hover:opacity-60 transition-opacity" />
+        <div className="absolute inset-0 bg-teal-500 rounded-[2rem] blur-xl opacity-40 group-hover:opacity-60 transition-opacity" />
         <Plus size={44} className="relative drop-shadow-lg" />
       </button>
 

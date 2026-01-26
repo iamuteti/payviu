@@ -14,7 +14,7 @@ const ThemeToggle: React.FC<ThemeToggleProps> = ({ isDark, toggle }) => {
             className="p-2.5 glass rounded-xl text-gray-400 hover:text-sky-500 transition-all active:scale-90"
             aria-label="Toggle Theme"
         >
-            {isDark ? <Sun size={20} className="text-yellow-400" /> : <Moon size={20} className="text-sky-600" />}
+            {isDark ? <Sun size={20} className="text-yellow-400" /> : <Moon size={20} className="text-teal-600" />}
         </button>
     );
 };

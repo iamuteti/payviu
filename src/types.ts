@@ -17,6 +17,7 @@ export interface Payment {
   totalAmount: number;
   amountPaid: number;
   createdAt: string;
+  paymentDate?: string;
   userId: string;
 }
 

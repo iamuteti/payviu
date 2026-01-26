@@ -45,12 +45,12 @@ const Auth: React.FC<AuthProps> = ({ }) => {
     <div className='w-full min-h-screen flex items-center justify-center p-4 bg-transparent'>
       <div className="w-full max-w-md glass-card p-8 sm:p-12 rounded-[3.5rem] shadow-2xl animate-in zoom-in-95 duration-700 relative overflow-hidden">
         {/* Abstract Background Glows */}
-        <div className="absolute -top-24 -left-24 w-48 h-48 bg-sky-500/20 blur-[80px] rounded-full" />
-        <div className="absolute -bottom-24 -right-24 w-48 h-48 bg-indigo-500/20 blur-[80px] rounded-full" />
+        <div className="absolute -top-24 -left-24 w-48 h-48 bg-teal-500/20 blur-[80px] rounded-full" />
+        <div className="absolute -bottom-24 -right-24 w-48 h-48 bg-cyan-500/20 blur-[80px] rounded-full" />
 
         <div className="relative z-10">
           <div className="mb-10">
-            <div className="w-20 h-20 bg-sky-500/10 dark:bg-sky-500/20 text-sky-500 rounded-[2rem] flex items-center justify-center mx-auto mb-6 shadow-inner transform -rotate-3 hover:rotate-0 transition-transform duration-500 animate-float">
+            <div className="w-20 h-20 bg-teal-500/10 dark:bg-teal-500/20 text-teal-500 rounded-[2rem] flex items-center justify-center mx-auto mb-6 shadow-inner transform -rotate-3 hover:rotate-0 transition-transform duration-500 animate-float">
               <svg viewBox="0 0 24 24" className="w-10 h-10 fill-current" xmlns="http://www.w3.org/2000/svg">
                 <path d="M12.75 4h-1.5a.75.75 0 0 0-.75.75v14.5c0 .414.336.75.75.75h1.5a.75.75 0 0 0 .75-.75V4.75a.75.75 0 0 0-.75-.75zM4 12.75v-1.5a.75.75 0 0 1 .75-.75h14.5a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-.75.75H4.75a.75.75 0 0 1-.75-.75z" />
               </svg>
@@ -62,42 +62,42 @@ const Auth: React.FC<AuthProps> = ({ }) => {
           <form onSubmit={handleEmailAuth} className="space-y-4 mb-8">
             {mode === 'signup' && (
               <div className="relative group">
-                <UserIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-sky-500 transition-colors" size={18} />
+                <UserIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-teal-500 transition-colors" size={18} />
                 <input
                   type="text"
                   placeholder="Full Name"
                   required
-                  className="w-full pl-12 pr-4 py-4 glass bg-white/50 dark:bg-white/5 rounded-2xl border-white/20 dark:border-white/10 focus:ring-4 focus:ring-sky-500/10 outline-none text-sm font-bold text-gray-900 dark:text-white transition-all placeholder-gray-400"
+                  className="w-full pl-12 pr-4 py-4 glass bg-white/50 dark:bg-white/5 rounded-2xl border-white/20 dark:border-white/10 focus:ring-4 focus:ring-teal-500/10 outline-none text-sm font-bold text-gray-900 dark:text-white transition-all placeholder-gray-400"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                 />
               </div>
             )}
             <div className="relative group">
-              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-sky-500 transition-colors" size={18} />
+              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-teal-500 transition-colors" size={18} />
               <input
                 type="email"
                 placeholder="Email Address"
                 required
-                className="w-full pl-12 pr-4 py-4 glass bg-white/50 dark:bg-white/5 rounded-2xl border-white/20 dark:border-white/10 focus:ring-4 focus:ring-sky-500/10 outline-none text-sm font-bold text-gray-900 dark:text-white transition-all placeholder-gray-400"
+                className="w-full pl-12 pr-4 py-4 glass bg-white/50 dark:bg-white/5 rounded-2xl border-white/20 dark:border-white/10 focus:ring-4 focus:ring-teal-500/10 outline-none text-sm font-bold text-gray-900 dark:text-white transition-all placeholder-gray-400"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
             </div>
             <div className="relative group">
-              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-sky-500 transition-colors" size={18} />
+              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-teal-500 transition-colors" size={18} />
               <input
                 type="password"
                 placeholder="Password"
                 required
-                className="w-full pl-12 pr-4 py-4 glass bg-white/50 dark:bg-white/5 rounded-2xl border-white/20 dark:border-white/10 focus:ring-4 focus:ring-sky-500/10 outline-none text-sm font-bold text-gray-900 dark:text-white transition-all placeholder-gray-400"
+                className="w-full pl-12 pr-4 py-4 glass bg-white/50 dark:bg-white/5 rounded-2xl border-white/20 dark:border-white/10 focus:ring-4 focus:ring-teal-500/10 outline-none text-sm font-bold text-gray-900 dark:text-white transition-all placeholder-gray-400"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
             </div>
             <button
               type="submit"
-              className="w-full py-4 bg-sky-500 text-white rounded-2xl font-black text-sm uppercase tracking-widest shadow-xl shadow-sky-500/30 hover:bg-sky-600 hover:translate-y-[-2px] active:scale-[0.98] transition-all"
+              className="w-full py-4 bg-teal-500 text-white rounded-2xl font-black text-sm uppercase tracking-widest shadow-xl shadow-teal-500/30 hover:bg-teal-600 hover:translate-y-[-2px] active:scale-[0.98] transition-all"
             >
               {mode === 'login' ? 'Sign In' : 'Create Account'}
             </button>
@@ -128,7 +128,7 @@ const Auth: React.FC<AuthProps> = ({ }) => {
             {mode === 'login' ? "Don't have an account?" : "Already have an account?"}
             <button
               onClick={() => setMode(mode === 'login' ? 'signup' : 'login')}
-              className="ml-2 text-sky-500 hover:text-sky-600 transition-colors"
+              className="ml-2 text-teal-500 hover:text-teal-600 transition-colors"
             >
               {mode === 'login' ? 'Sign Up' : 'Log In'}
             </button>
