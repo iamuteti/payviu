@@ -25,6 +25,8 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, onSubmit, 
     color: COLORS[0].value,
     status: 'pending',
     totalAmount: 0,
+    notes: '',
+    reminderDays: [1, 3],
   });
 
   useEffect(() => {
@@ -41,6 +43,8 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, onSubmit, 
         color: COLORS[0].value,
         status: 'pending',
         totalAmount: 0,
+        notes: '',
+        reminderDays: [1, 3],
       });
     }
   }, [initialData, isOpen]);
@@ -172,10 +176,37 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, onSubmit, 
             <label className="text-[10px] font-black text-secondary uppercase tracking-widest ml-1">Notes</label>
             <textarea
               className="w-full px-6 py-4 glass bg-white/50 dark:bg-white/5 rounded-2xl border-white/20 dark:border-white/10 focus:ring-4 focus:ring-teal-500/20 focus:border-teal-500/40 outline-none text-base font-bold text-secondary resize-none h-32 transition-all placeholder-gray-400"
-              placeholder="Add some details..."
-              value={formData.description}
-              onChange={e => setFormData({ ...formData, description: e.target.value })}
+              placeholder="Add notes about this payment..."
+              value={formData.notes || ''}
+              onChange={e => setFormData({ ...formData, notes: e.target.value })}
             />
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-[10px] font-black text-secondary uppercase tracking-widest ml-1">Reminder Days</label>
+            <p className="text-xs text-gray-600 dark:text-gray-400">Get notified these many days before due date</p>
+            <div className="flex flex-wrap gap-2">
+              {[1, 2, 3, 5, 7, 14].map(day => (
+                <button
+                  key={day}
+                  type="button"
+                  onClick={() => {
+                    const current = formData.reminderDays || [];
+                    const updated = current.includes(day)
+                      ? current.filter(d => d !== day)
+                      : [...current, day].sort((a, b) => a - b);
+                    setFormData({ ...formData, reminderDays: updated });
+                  }}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    (formData.reminderDays || []).includes(day)
+                      ? 'bg-teal-500 text-white'
+                      : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                  }`}
+                >
+                  {day} day{day !== 1 ? 's' : ''}
+                </button>
+              ))}
+            </div>
           </div>
 
           <div className="space-y-2">

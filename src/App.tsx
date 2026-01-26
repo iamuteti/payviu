@@ -1,13 +1,17 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { Plus, LogOut, Search } from 'lucide-react';
+import { Plus, LogOut, Search, Bell, Download } from 'lucide-react';
 import { collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, query, where } from 'firebase/firestore';
-import type { Payment, PaymentPriority } from './types';
+import type { Payment, PaymentPriority, ExportOptions } from './types';
 import PaymentCard from './components/PaymentCard';
 import PaymentModal from './components/PaymentModal';
 import PayModal from './components/PayModal';
 import Auth from './components/Auth';
 import ThemeToggle from './components/ThemeToggle';
+import NotificationSettings from './components/NotificationSettings';
+import PaymentHistory from './components/PaymentHistory';
+import ExportModal from './components/ExportModal';
+import { exportToCSV, exportToPDF, filterPaymentsByDateRange } from './utils/exportUtils';
 import { db, auth } from './firebase';
 import { useUser } from './contexts/UserContext';
 
@@ -17,6 +21,10 @@ const App: React.FC = () => {
   const { user } = useUser();
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [isPayModalOpen, setIsPayModalOpen] = useState(false);
+  const [isNotificationSettingsOpen, setIsNotificationSettingsOpen] = useState(false);
+  const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+  const [historyPayment, setHistoryPayment] = useState<Payment | undefined>(undefined);
   const [editingPayment, setEditingPayment] = useState<Payment | undefined>(undefined);
   const [activePayingPayment, setActivePayingPayment] = useState<Payment | undefined>(undefined);
   const [searchQuery, setSearchQuery] = useState('');
@@ -26,6 +34,11 @@ const App: React.FC = () => {
     return saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches);
   });
   const [isOnline, setIsOnline] = useState(navigator.onLine);
+
+  const [notificationSettings, setNotificationSettings] = useState(() => {
+    const saved = localStorage.getItem('notificationSettings');
+    return saved ? JSON.parse(saved) : { enabled: true, defaultReminderDays: [1, 3] };
+  });
 
   const [localPayments, setLocalPayments] = useState<Payment[]>(() => {
     const saved = localStorage.getItem('payments');
@@ -83,9 +96,69 @@ const App: React.FC = () => {
   }, [localPayments]);
 
   // Save pending changes to localStorage
-  useEffect(() => {
-    localStorage.setItem('pendingChanges', JSON.stringify(pendingChanges));
-  }, [pendingChanges]);
+   useEffect(() => {
+     localStorage.setItem('pendingChanges', JSON.stringify(pendingChanges));
+   }, [pendingChanges]);
+
+   // Save notification settings to localStorage
+   useEffect(() => {
+     localStorage.setItem('notificationSettings', JSON.stringify(notificationSettings));
+   }, [notificationSettings]);
+
+   // Notification permission and setup
+   useEffect(() => {
+     if ('Notification' in window && Notification.permission === 'default') {
+       Notification.requestPermission();
+     }
+   }, []);
+
+   // Notification functions
+   const showNotification = (title: string, body: string) => {
+     if ('Notification' in window && Notification.permission === 'granted') {
+       new Notification(title, {
+         body,
+         icon: '/vite.svg', // or user picture
+         tag: 'glasspay-reminder'
+       });
+     }
+   };
+
+   // Check for reminders
+   const checkReminders = () => {
+     const today = new Date();
+     today.setHours(0, 0, 0, 0);
+
+     localPayments.forEach(payment => {
+       if (payment.status === 'paid') return;
+
+       const dueDate = new Date(payment.dueDate);
+       dueDate.setHours(0, 0, 0, 0);
+
+       const daysDiff = Math.ceil((dueDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+
+       if (payment.reminderDays?.includes(daysDiff) && daysDiff >= 0) {
+         showNotification(
+           `Payment Reminder: ${payment.title}`,
+           `Due in ${daysDiff} day${daysDiff !== 1 ? 's' : ''} - $${payment.totalAmount - payment.amountPaid} remaining`
+         );
+       }
+
+       // Overdue reminder
+       if (daysDiff < 0 && Math.abs(daysDiff) === 1) {
+         showNotification(
+           `Overdue Payment: ${payment.title}`,
+           `Was due ${Math.abs(daysDiff)} day ago - $${payment.totalAmount - payment.amountPaid} remaining`
+         );
+       }
+     });
+   };
+
+   // Check reminders on payment changes and periodically
+   useEffect(() => {
+     checkReminders();
+     const interval = setInterval(checkReminders, 60 * 60 * 1000); // Check every hour
+     return () => clearInterval(interval);
+   }, [localPayments]);
 
   // Apply pending changes when online
   useEffect(() => {
@@ -153,6 +226,8 @@ const App: React.FC = () => {
           }
         } else if (change.type === 'delete') {
           await deleteDoc(doc(db, 'payments', change.id));
+        } else if (change.type === 'addHistory') {
+          await addDoc(collection(db, 'paymentHistory'), change.data);
         }
       } catch (error) {
         console.error('Failed to apply change:', error);
@@ -165,12 +240,65 @@ const App: React.FC = () => {
     await auth.signOut();
   };
 
+  const handleSaveNotificationSettings = (settings: { enabled: boolean; defaultReminderDays: number[] }) => {
+    setNotificationSettings(settings);
+  };
+
+  const handleViewHistory = (payment: Payment) => {
+    setHistoryPayment(payment);
+    setIsHistoryModalOpen(true);
+  };
+
+  const handleExport = async (options: ExportOptions) => {
+    let filteredPayments = filterPaymentsByDateRange(localPayments, options.dateRange);
+
+    if (options.format === 'csv') {
+      exportToCSV(filteredPayments);
+    } else if (options.format === 'pdf') {
+      exportToPDF(filteredPayments);
+    }
+
+    setIsExportModalOpen(false);
+  };
+
+  // History tracking
+  const addHistoryEntry = async (paymentId: string, action: 'created' | 'updated' | 'paid' | 'deleted', changes: Record<string, any>, previousValues?: Record<string, any>) => {
+    if (!user) return;
+
+    const historyEntry = {
+      paymentId,
+      userId: user.id,
+      action,
+      timestamp: new Date().toISOString(),
+      changes,
+      previousValues
+    };
+
+    if (!isOnline) {
+      setPendingChanges(prev => [...prev, { type: 'addHistory', data: historyEntry }]);
+    } else {
+      await addDoc(collection(db, 'paymentHistory'), historyEntry);
+    }
+  };
+
   const addOrUpdatePayment = async (data: Partial<Payment>) => {
     if (!user) return;
 
     let nextOccurrence: Payment | null = null;
 
     if (editingPayment) {
+      // Track update history
+      const changes = Object.keys(data).reduce((acc, key) => {
+        if (data[key as keyof Payment] !== editingPayment[key as keyof Payment]) {
+          acc[key] = data[key as keyof Payment];
+        }
+        return acc;
+      }, {} as Record<string, any>);
+
+      if (Object.keys(changes).length > 0) {
+        await addHistoryEntry(editingPayment.id, 'updated', changes, editingPayment);
+      }
+
       if (!isOnline) {
         const updated = { ...editingPayment, ...data } as Payment;
         setLocalPayments(prev => prev.map(p => p.id === editingPayment.id ? updated : p));
@@ -222,6 +350,7 @@ const App: React.FC = () => {
         };
         const docRef = await addDoc(collection(db, 'payments'), newPayment);
         const addedPayment = { id: docRef.id, ...newPayment } as Payment;
+        await addHistoryEntry(addedPayment.id, 'created', newPayment);
         if (addedPayment.status === 'paid' && addedPayment.type === 'Recurring') {
           nextOccurrence = createRecurringOccurrence(addedPayment);
         }
@@ -258,6 +387,9 @@ const App: React.FC = () => {
     const newPaid = activePayingPayment.amountPaid + amount;
     const newStatus = newPaid >= activePayingPayment.totalAmount ? 'paid' : activePayingPayment.status;
     const updateData = { amountPaid: newPaid, status: newStatus, paymentDate };
+
+    // Track payment history
+    await addHistoryEntry(activePayingPayment.id, 'paid', { amountPaid: amount, paymentDate, newTotalPaid: newPaid });
 
     if (!isOnline) {
       setLocalPayments(prev => prev.map(p => p.id === activePayingPayment.id ? { ...p, ...updateData } : p));
@@ -337,6 +469,20 @@ const App: React.FC = () => {
         <div className="flex items-center gap-3">
           <ThemeToggle isDark={isDark} toggle={() => setIsDark(!isDark)} />
           <button
+            onClick={() => setIsExportModalOpen(true)}
+            className="p-3 glass rounded-2xl text-gray-400 hover:text-teal-500 hover:bg-teal-500/10 transition-all active:scale-95"
+            title="Export Payments"
+          >
+            <Download size={20} />
+          </button>
+          <button
+            onClick={() => setIsNotificationSettingsOpen(true)}
+            className="p-3 glass rounded-2xl text-gray-400 hover:text-teal-500 hover:bg-teal-500/10 transition-all active:scale-95"
+            title="Notification Settings"
+          >
+            <Bell size={20} />
+          </button>
+          <button
             onClick={handleLogout}
             className="p-3 glass rounded-2xl text-gray-400 hover:text-red-500 hover:bg-red-500/10 transition-all active:scale-95"
             title="Logout"
@@ -398,6 +544,7 @@ const App: React.FC = () => {
               onEdit={() => { setEditingPayment(p); setIsPaymentModalOpen(true); }}
               onDelete={() => deletePayment(p.id)}
               onPay={() => { setActivePayingPayment(p); setIsPayModalOpen(true); }}
+              onHistory={() => handleViewHistory(p)}
             />
           ))
         )}
@@ -423,6 +570,26 @@ const App: React.FC = () => {
         onClose={() => setIsPayModalOpen(false)}
         payment={activePayingPayment}
         onPay={handlePay}
+      />
+
+      <NotificationSettings
+        isOpen={isNotificationSettingsOpen}
+        onClose={() => setIsNotificationSettingsOpen(false)}
+        onSave={handleSaveNotificationSettings}
+        initialSettings={notificationSettings}
+      />
+
+      <PaymentHistory
+        isOpen={isHistoryModalOpen}
+        onClose={() => setIsHistoryModalOpen(false)}
+        paymentId={historyPayment?.id || ''}
+        paymentTitle={historyPayment?.title || ''}
+      />
+
+      <ExportModal
+        isOpen={isExportModalOpen}
+        onClose={() => setIsExportModalOpen(false)}
+        onExport={handleExport}
       />
     </div>
   );

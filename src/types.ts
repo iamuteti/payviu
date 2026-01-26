@@ -19,6 +19,27 @@ export interface Payment {
   createdAt: string;
   paymentDate?: string;
   userId: string;
+  notes?: string;
+  reminderDays?: number[];
+}
+
+export interface PaymentHistoryEntry {
+  id: string;
+  paymentId: string;
+  userId: string;
+  action: 'created' | 'updated' | 'paid' | 'deleted';
+  timestamp: string;
+  changes: Record<string, any>;
+  previousValues?: Record<string, any>;
+}
+
+export interface ExportOptions {
+  format: 'csv' | 'pdf';
+  dateRange?: {
+    start: string;
+    end: string;
+  };
+  includeHistory?: boolean;
 }
 
 export interface User {

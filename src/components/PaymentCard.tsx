@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { ChevronDown, Edit2, Trash2, CreditCard, Calendar, RotateCcw } from 'lucide-react';
+import { ChevronDown, Edit2, Trash2, CreditCard, Calendar, RotateCcw, Clock } from 'lucide-react';
 import type { Payment } from '../types';
 
 interface PaymentCardProps {
@@ -8,9 +8,10 @@ interface PaymentCardProps {
   onEdit: () => void;
   onDelete: () => void;
   onPay: () => void;
+  onHistory: () => void;
 }
 
-const PaymentCard: React.FC<PaymentCardProps> = ({ payment, onEdit, onDelete, onPay }) => {
+const PaymentCard: React.FC<PaymentCardProps> = ({ payment, onEdit, onDelete, onPay, onHistory }) => {
   const [isOpen, setIsOpen] = useState(false);
 
   const calculateTimeProgress = () => {
@@ -169,6 +170,13 @@ const PaymentCard: React.FC<PaymentCardProps> = ({ payment, onEdit, onDelete, on
               >
                 <CreditCard size={16} />
                 {payment.status === 'paid' ? 'Fully Paid' : 'Make Payment'}
+              </button>
+              <button
+                onClick={(e) => { e.stopPropagation(); onHistory(); }}
+                className="p-4 glass rounded-2xl text-gray-500 dark:text-gray-400 hover:text-blue-500 hover:bg-white/50 transition-all active:scale-95"
+                title="View History"
+              >
+                <Clock size={18} />
               </button>
               <button
                 onClick={(e) => { e.stopPropagation(); onEdit(); }}
