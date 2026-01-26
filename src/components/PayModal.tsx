@@ -7,11 +7,12 @@ interface PayModalProps {
   isOpen: boolean;
   onClose: () => void;
   payment?: Payment;
-  onPay: (amount: number) => void;
+  onPay: (amount: number, paymentDate: string) => void;
 }
 
 const PayModal: React.FC<PayModalProps> = ({ isOpen, onClose, payment, onPay }) => {
   const [amount, setAmount] = useState<string>('');
+  const [paymentDate, setPaymentDate] = useState<string>(() => new Date().toISOString().split('T')[0]);
 
   useEffect(() => {
     if (payment) {
@@ -25,7 +26,7 @@ const PayModal: React.FC<PayModalProps> = ({ isOpen, onClose, payment, onPay }) 
     e.preventDefault();
     const val = parseFloat(amount);
     if (isNaN(val) || val <= 0) return;
-    onPay(val);
+    onPay(val, paymentDate);
   };
 
   return (
@@ -54,6 +55,16 @@ const PayModal: React.FC<PayModalProps> = ({ isOpen, onClose, payment, onPay }) 
               placeholder="0.00"
               value={amount}
               onChange={e => setAmount(e.target.value)}
+            />
+          </div>
+
+          <div className="relative group">
+            <label className="block text-xs text-gray-500 dark:text-gray-400 mb-2 font-medium">Payment Date</label>
+            <input
+              type="date"
+              className="w-full pl-4 pr-4 py-5 glass-card bg-gray-50 dark:bg-white/5 text-xl font-black text-secondary rounded-2xl focus:ring-2 focus:ring-emerald-500/20 outline-none"
+              value={paymentDate}
+              onChange={e => setPaymentDate(e.target.value)}
             />
           </div>
 

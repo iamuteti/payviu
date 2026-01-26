@@ -70,7 +70,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, onSubmit, 
             <input
               required
               type="text"
-              className="w-full px-6 py-4 glass bg-white/50 dark:bg-white/5 rounded-2xl border-white/20 dark:border-white/10 focus:ring-4 focus:ring-sky-500/20 focus:border-sky-500/40 outline-none text-base font-bold text-secondary transition-all placeholder-gray-400"
+              className="w-full px-6 py-4 glass bg-white/50 dark:bg-white/5 rounded-2xl border-white/20 dark:border-white/10 focus:ring-4 focus:ring-teal-500/20 focus:border-teal-500/40 outline-none text-base font-bold text-secondary transition-all placeholder-gray-400"
               placeholder="e.g. Monthly Rent"
               value={formData.title}
               onChange={e => setFormData({ ...formData, title: e.target.value })}
@@ -85,7 +85,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, onSubmit, 
                 required
                 type="number"
                 step="1"
-                className="w-full pl-10 pr-6 py-4 glass bg-white/50 dark:bg-white/5 rounded-2xl border-white/20 dark:border-white/10 focus:ring-4 focus:ring-sky-500/20 focus:border-sky-500/40 outline-none text-base font-bold text-secondary transition-all"
+                className="w-full pl-10 pr-6 py-4 glass bg-white/50 dark:bg-white/5 rounded-2xl border-white/20 dark:border-white/10 focus:ring-4 focus:ring-teal-500/20 focus:border-teal-500/40 outline-none text-base font-bold text-secondary transition-all"
                 placeholder="0.00"
                 value={formData.totalAmount}
                 onChange={e => setFormData({ ...formData, totalAmount: parseFloat(e.target.value) || 0 })}
@@ -105,39 +105,39 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, onSubmit, 
                 <option value="Recurring">Recurring</option>
               </select>
             </div>
-            {formData.type === 'Recurring' ? (
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-secondary uppercase tracking-widest ml-1">Period</label>
-                <select
-                  className="w-full px-6 py-4 glass bg-white/50 dark:bg-white/5 rounded-2xl border-white/20 dark:border-white/10 outline-none text-base font-bold text-secondary cursor-pointer hover:bg-white/70 dark:hover:bg-white/10 transition-colors"
-                  value={formData.period || ''}
-                  onChange={e => setFormData({ ...formData, period: e.target.value as PaymentPeriod })}
-                >
-                  <option value="">Select period</option>
-                  <option value="weekly">Weekly</option>
-                  <option value="biweekly">Bi-weekly</option>
-                  <option value="monthly">Monthly</option>
-                  <option value="semi-annually">Semi-annually</option>
-                  <option value="annually">Annually</option>
-                </select>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-secondary uppercase tracking-widest ml-1">Priority</label>
-                <select
-                  className="w-full px-6 py-4 glass bg-white/50 dark:bg-white/5 rounded-2xl border-white/20 dark:border-white/10 outline-none text-base font-bold text-secondary cursor-pointer hover:bg-white/70 dark:hover:bg-white/10 transition-colors"
-                  value={formData.priority}
-                  onChange={e => setFormData({ ...formData, priority: e.target.value as PaymentPriority })}
-                >
-                  <option value="Urgent">Urgent</option>
-                  <option value="Critical">Critical</option>
-                  <option value="High">High</option>
-                  <option value="Medium">Medium</option>
-                  <option value="Low">Low</option>
-                </select>
-              </div>
-            )}
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-secondary uppercase tracking-widest ml-1">Priority</label>
+              <select
+                className="w-full px-6 py-4 glass bg-white/50 dark:bg-white/5 rounded-2xl border-white/20 dark:border-white/10 outline-none text-base font-bold text-secondary cursor-pointer hover:bg-white/70 dark:hover:bg-white/10 transition-colors"
+                value={formData.priority}
+                onChange={e => setFormData({ ...formData, priority: e.target.value as PaymentPriority })}
+              >
+                <option value="Urgent">Urgent</option>
+                <option value="Critical">Critical</option>
+                <option value="High">High</option>
+                <option value="Medium">Medium</option>
+                <option value="Low">Low</option>
+              </select>
+            </div>
           </div>
+
+          {formData.type === 'Recurring' && (
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-secondary uppercase tracking-widest ml-1">Period</label>
+              <select
+                className="w-full px-6 py-4 glass bg-white/50 dark:bg-white/5 rounded-2xl border-white/20 dark:border-white/10 outline-none text-base font-bold text-secondary cursor-pointer hover:bg-white/70 dark:hover:bg-white/10 transition-colors"
+                value={formData.period || ''}
+                onChange={e => setFormData({ ...formData, period: e.target.value as PaymentPeriod })}
+              >
+                <option value="">Select period</option>
+                <option value="weekly">Weekly</option>
+                <option value="biweekly">Bi-weekly</option>
+                <option value="monthly">Monthly</option>
+                <option value="semi-annually">Semi-annually</option>
+                <option value="annually">Annually</option>
+              </select>
+            </div>
+          )}
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
@@ -149,7 +149,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, onSubmit, 
                     if (date) setFormData({ ...formData, dueDate: date.toISOString().split('T')[0] });
                   }}
                   dateFormat="MMM d, yyyy"
-                  className="w-full px-6 py-4 glass bg-white/50 dark:bg-white/5 rounded-2xl border-white/20 dark:border-white/10 outline-none text-base font-bold text-secondary cursor-pointer hover:bg-white/70 dark:hover:bg-white/10 transition-colors [&_.react-datepicker]:!bg-slate-800 [&_.react-datepicker]:!border-slate-700 [&_.react-datepicker__day--selected]:!bg-sky-500"
+                  className="w-full px-6 py-4 glass bg-white/50 dark:bg-white/5 rounded-2xl border-white/20 dark:border-white/10 outline-none text-base font-bold text-secondary cursor-pointer hover:bg-white/70 dark:hover:bg-white/10 transition-colors [&_.react-datepicker]:!bg-slate-800 [&_.react-datepicker]:!border-slate-700 [&_.react-datepicker__day--selected]:!bg-teal-500"
                 />
                 <CalendarIcon size={14} className="absolute right-4 top-1/2 -translate-y-1/2 text-secondary pointer-events-none" />
               </div>
@@ -171,7 +171,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, onSubmit, 
           <div className="space-y-2">
             <label className="text-[10px] font-black text-secondary uppercase tracking-widest ml-1">Notes</label>
             <textarea
-              className="w-full px-6 py-4 glass bg-white/50 dark:bg-white/5 rounded-2xl border-white/20 dark:border-white/10 focus:ring-4 focus:ring-sky-500/20 focus:border-sky-500/40 outline-none text-base font-bold text-secondary resize-none h-32 transition-all placeholder-gray-400"
+              className="w-full px-6 py-4 glass bg-white/50 dark:bg-white/5 rounded-2xl border-white/20 dark:border-white/10 focus:ring-4 focus:ring-teal-500/20 focus:border-teal-500/40 outline-none text-base font-bold text-secondary resize-none h-32 transition-all placeholder-gray-400"
               placeholder="Add some details..."
               value={formData.description}
               onChange={e => setFormData({ ...formData, description: e.target.value })}
@@ -187,7 +187,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, onSubmit, 
                   type="button"
                   aria-label={`Select color ${color.name}`}
                   onClick={() => setFormData({ ...formData, color: color.value })}
-                  className={`w-10 h-10 rounded-2xl border-2 transition-all ${formData.color === color.value ? 'scale-110 border-sky-500 shadow-xl rotate-12 opacity-100' : 'border-transparent opacity-60 hover:opacity-100'}`}
+                  className={`w-10 h-10 rounded-2xl border-2 transition-all ${formData.color === color.value ? 'scale-110 border-teal-500 shadow-xl rotate-12 opacity-100' : 'border-transparent opacity-60 hover:opacity-100'}`}
                   style={{ backgroundColor: color.value }}
                 />
               ))}
@@ -197,7 +197,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, onSubmit, 
           <div className="pt-8 pb-4">
             <button
               type="submit"
-              className="w-full py-5 bg-sky-500 text-white rounded-3xl font-black text-xl uppercase tracking-widest shadow-[0_20px_40px_-15px_rgba(14,165,233,0.5)] active:scale-[0.97] transition-all hover:bg-sky-600 hover:translate-y-[-2px]"
+              className="w-full py-5 bg-teal-500 text-white rounded-3xl font-black text-xl uppercase tracking-widest shadow-[0_20px_40px_-15px_rgba(20,184,166,0.5)] active:scale-[0.97] transition-all hover:bg-teal-600 hover:translate-y-[-2px]"
             >
               {initialData ? 'Update Record' : 'Confirm Entry'}
             </button>

@@ -2,37 +2,105 @@
 
 @theme {
   --font-sans: "Outfit", ui-sans-serif, system-ui, -apple-system, sans-serif;
-  --color-accent: #0ea5e9;
+
+  /* Primary colors */
+  --color-accent: var(--accent);
   --color-primary: var(--text-primary);
   --color-secondary: var(--text-secondary);
   --color-muted: var(--text-muted);
+
+  /* Backgrounds */
   --card-bg: var(--card-bg);
   --glass-bg: var(--glass-bg);
   --glass-border: var(--glass-border);
+
+  /* Status colors */
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-error: var(--error);
+  --color-info: var(--info);
 }
 
-/* @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100;200;300;400;500;600;700;800;900&display=swap'); */
-
+/* Light Mode - Modern Mint Theme */
 :root {
-  --bg-gradient: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
-  --card-bg: rgba(255, 255, 255, 0.7);
-  --glass-bg: rgba(255, 255, 255, 0.4);
-  --glass-border: rgba(255, 255, 255, 0.5);
-  --text-primary: #0f172a;
-  --text-secondary: #475569;
-  --text-muted: #94a3b8;
-  --accent: #0ea5e9;
+  /* Gradients */
+  --bg-gradient: linear-gradient(135deg, #f0fdfa 0%, #ecfdf5 100%);
+
+  /* Glass Effects */
+  --card-bg: rgba(255, 255, 255, 0.8);
+  --glass-bg: rgba(255, 255, 255, 0.5);
+  --glass-border: rgba(20, 184, 166, 0.1);
+
+  /* Text Colors */
+  --text-primary: #134e4a;
+  --text-secondary: #0f766e;
+  --text-muted: #5eead4;
+
+  /* Accent */
+  --accent: #14b8a6;
+  --accent-hover: #0d9488;
+  --accent-light: #99f6e4;
+
+  /* Status Colors */
+  --success: #10b981;
+  --success-light: #d1fae5;
+  --warning: #fb923c;
+  --warning-light: #fed7aa;
+  --error: #f43f5e;
+  --error-light: #fecdd3;
+  --info: #06b6d4;
+  --info-light: #cffafe;
+
+  /* Priority/Status Indicators */
+  --priority-high: #f43f5e;
+  --priority-medium: #fb923c;
+  --priority-low: #06b6d4;
+
+  /* Shadow */
+  --shadow-sm: 0 2px 8px rgba(20, 184, 166, 0.08);
+  --shadow-md: 0 4px 16px rgba(20, 184, 166, 0.12);
+  --shadow-lg: 0 8px 32px rgba(20, 184, 166, 0.15);
 }
 
+/* Dark Mode - Modern Mint Theme */
 .dark {
-  --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
-  --card-bg: rgba(30, 41, 59, 0.7);
-  --glass-bg: rgba(30, 41, 59, 0.4);
-  --glass-border: rgba(255, 255, 255, 0.1);
-  --text-primary: #f8fafc;
-  --text-secondary: #cbd5e1;
-  --text-muted: #64748b;
-  --accent: #38bdf8;
+  /* Gradients */
+  --bg-gradient: linear-gradient(135deg, #0c1415 0%, #0a1a1c 100%);
+
+  /* Glass Effects */
+  --card-bg: rgba(19, 30, 32, 0.85);
+  --glass-bg: rgba(19, 30, 32, 0.55);
+  --glass-border: rgba(94, 234, 212, 0.15);
+
+  /* Text Colors */
+  --text-primary: #f0fdfa;
+  --text-secondary: #99f6e4;
+  --text-muted: #2dd4bf;
+
+  /* Accent */
+  --accent: #14b8a6;
+  --accent-hover: #2dd4bf;
+  --accent-light: #134e4a;
+
+  /* Status Colors */
+  --success: #10b981;
+  --success-light: rgba(16, 185, 129, 0.15);
+  --warning: #fb923c;
+  --warning-light: rgba(251, 146, 60, 0.15);
+  --error: #f43f5e;
+  --error-light: rgba(244, 63, 94, 0.15);
+  --info: #06b6d4;
+  --info-light: rgba(6, 182, 212, 0.15);
+
+  /* Priority/Status Indicators */
+  --priority-high: #f43f5e;
+  --priority-medium: #fb923c;
+  --priority-low: #06b6d4;
+
+  /* Shadow */
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.4);
 }
 
 @layer base {
@@ -41,11 +109,17 @@
     background: var(--bg-gradient);
     background-attachment: fixed;
     color: var(--text-primary);
-    transition: background 0.5s ease;
+    transition: background 0.5s ease, color 0.3s ease;
+  }
+
+  * {
+    @apply transition-colors duration-200;
   }
 }
 
 @layer components {
+
+  /* Glass Effects */
   .glass {
     @apply backdrop-blur-xl border;
     background: var(--glass-bg);
@@ -56,9 +130,85 @@
     @apply backdrop-blur-2xl border;
     background: var(--card-bg);
     border-color: var(--glass-border);
-    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
+    box-shadow: var(--shadow-md);
   }
 
+  .glass-card:hover {
+    box-shadow: var(--shadow-lg);
+  }
+
+  /* Status Badges */
+  .badge-success {
+    @apply px-3 py-1 rounded-full text-sm font-medium;
+    background: var(--success-light);
+    color: var(--success);
+  }
+
+  .badge-warning {
+    @apply px-3 py-1 rounded-full text-sm font-medium;
+    background: var(--warning-light);
+    color: var(--warning);
+  }
+
+  .badge-error {
+    @apply px-3 py-1 rounded-full text-sm font-medium;
+    background: var(--error-light);
+    color: var(--error);
+  }
+
+  .badge-info {
+    @apply px-3 py-1 rounded-full text-sm font-medium;
+    background: var(--info-light);
+    color: var(--info);
+  }
+
+  /* Priority Indicators */
+  .priority-high {
+    color: var(--priority-high);
+  }
+
+  .priority-medium {
+    color: var(--priority-medium);
+  }
+
+  .priority-low {
+    color: var(--priority-low);
+  }
+
+  /* Button Styles */
+  .btn-accent {
+    @apply px-4 py-2 rounded-xl font-medium transition-all;
+    background: var(--accent);
+    color: white;
+  }
+
+  .btn-accent:hover {
+    background: var(--accent-hover);
+    box-shadow: var(--shadow-md);
+  }
+
+  /* Text Utilities */
+  .text-accent {
+    color: var(--accent);
+  }
+
+  .text-success {
+    color: var(--success);
+  }
+
+  .text-warning {
+    color: var(--warning);
+  }
+
+  .text-error {
+    color: var(--error);
+  }
+
+  .text-info {
+    color: var(--info);
+  }
+
+  /* Scrollbar Hiding */
   .no-scrollbar::-webkit-scrollbar {
     display: none;
   }
@@ -69,6 +219,7 @@
   }
 }
 
+/* Animations */
 @keyframes float {
   0% {
     transform: translateY(0px);
@@ -87,9 +238,29 @@
   animation: float 6s ease-in-out infinite;
 }
 
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+.animate-shimmer {
+  animation: shimmer 2s infinite linear;
+  background: linear-gradient(to right,
+      transparent 0%,
+      var(--accent-light) 50%,
+      transparent 100%);
+  background-size: 1000px 100%;
+}
+
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
@@ -99,6 +270,7 @@
 ::-webkit-scrollbar-thumb {
   @apply rounded-full;
   background: var(--text-muted);
+  transition: background 0.3s ease;
 }
 
 ::-webkit-scrollbar-thumb:hover {
@@ -117,51 +289,99 @@
   border-color: var(--glass-border) !important;
 }
 
-/* .dark .react-datepicker {
-  @apply !bg-slate-800/95 !border-slate-700;
-}
-
 .react-datepicker__header {
-  @apply !bg-transparent !border-b !border-white/10 !pt-4;
+  background: var(--glass-bg) !important;
+  border-bottom: 1px solid var(--glass-border) !important;
 }
 
-.dark .react-datepicker__header {
-  @apply !bg-slate-800/50 !border-slate-700;
-}
-
-.react-datepicker__day--selected {
-  @apply !bg-sky-500 !rounded-xl;
-}
-
-.react-datepicker__day:hover {
-  @apply !bg-white/10 !rounded-xl;
-}
-
-.dark .react-datepicker__day:hover {
-  @apply !bg-white/20 !rounded-xl;
-}
-
+.react-datepicker__current-month,
 .react-datepicker__day-name {
-  @apply !text-gray-600 dark:!text-gray-400;
-}
-
-.react-datepicker__current-month {
-  @apply !text-gray-900 dark:!text-white;
+  color: var(--text-primary) !important;
 }
 
 .react-datepicker__day {
-  @apply !text-gray-900 dark:!text-white;
+  color: var(--text-secondary) !important;
 }
 
-.react-datepicker__day--outside-month {
-  @apply !text-gray-400 dark:!text-gray-600;
-} */
+.react-datepicker__day:hover {
+  background: var(--accent-light) !important;
+  color: var(--text-primary) !important;
+}
 
-/* Fix for Select elements in dark mode */
+.react-datepicker__day--selected {
+  background: var(--accent) !important;
+  color: white !important;
+}
+
+.react-datepicker__day--keyboard-selected {
+  background: var(--accent-light) !important;
+  color: var(--text-primary) !important;
+}
+
+/* Form Elements */
+input,
+textarea,
+select {
+  @apply bg-transparent;
+  color: var(--text-primary);
+  border-color: var(--glass-border);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--text-muted);
+  opacity: 0.5;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-light);
+}
+
+/* Select Dropdown Fix for Dark Mode */
 select {
   @apply bg-transparent;
 }
 
 select option {
-  @apply bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white;
+  @apply bg-white dark:bg-slate-900;
+  color: var(--text-primary);
+}
+
+/* Progress Bar */
+.progress-bar {
+  @apply w-full h-2 rounded-full overflow-hidden;
+  background: var(--glass-bg);
+}
+
+.progress-bar-fill {
+  @apply h-full transition-all duration-300 ease-out;
+  background: var(--accent);
+}
+
+.progress-bar-fill.success {
+  background: var(--success);
+}
+
+.progress-bar-fill.warning {
+  background: var(--warning);
+}
+
+.progress-bar-fill.error {
+  background: var(--error);
+}
+
+/* Loading Skeleton */
+.skeleton {
+  @apply animate-pulse rounded;
+  background: var(--glass-bg);
+}
+
+/* Divider */
+.divider {
+  @apply w-full h-px;
+  background: var(--glass-border);
 }
